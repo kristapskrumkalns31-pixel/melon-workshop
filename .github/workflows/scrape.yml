@@ -1,0 +1,42 @@
+name: MelMod Live Scraper Clock
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo Storage
+        uses: actions/checkout@v3
+
+      - name: Execute Live Scraper Loop
+        run: |
+          curl -s "https://melmod.com" > raw_mods.html
+          echo "{" > workshop_feed.json
+          echo "  \"Workshop\": {\"Enabled\": true, \"RefreshIntervalDays\": 5, \"ConfigVersion\": \"18.0.7\"}," >> workshop_feed.json
+          echo "  \"ModsData\": [" >> workshop_feed.json
+          grep -oP '(?<=<h2 class="post-title">).*?(?=</h2>)' raw_mods.html | head -n 7 | while read -r title; do
+            echo "    {\"id\": \"live_mod\", \"title\": \"$title\", \"desc\": \"• LIVE SOURCED FROM WEB\", \"size\": \"50KB\", \"author\": \"@MELMOD\", \"file_url\": \"https://melmod.com\", \"img_url\": \"\"}," >> workshop_feed.json
+          done
+          sed -i '$ s/,$//' workshop_feed.json
+          echo "  ]," >> workshop_feed.json
+          
+          curl -s "https://melmod.comcategory/saves/" > raw_saves.html
+          echo "  \"SavesData\": [" >> workshop_feed.json
+          grep -oP '(?<=<h2 class="post-title">).*?(?=</h2>)' raw_saves.html | head -n 7 | while read -r title; do
+            echo "    {\"id\": \"live_save\", \"title\": \"$title\", \"desc\": \"• LIVE SOURCED SAVE\", \"size\": \"120KB\", \"author\": \"@MELMOD\", \"file_url\": \"https://melmod.com\", \"img_url\": \"\"}," >> workshop_feed.json
+          done
+          sed -i '$ s/,$//' workshop_feed.json
+          echo "  ]" >> workshop_feed.json
+          echo "}" >> workshop_feed.json
+
+      - name: Push Updated Live Config File
+        run: |
+          git config --global user.name "ScraperBot"
+          git config --global user.email "bot@github.com"
+          git add workshop_feed.json
+          git commit -m "Merged newest items into separate tabs" || exit 0
+          git push
+
