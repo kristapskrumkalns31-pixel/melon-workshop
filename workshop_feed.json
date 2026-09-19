@@ -1,0 +1,16 @@
+{
+  "Workshop": {
+    "Enabled": true,
+    "RefreshIntervalDays": 5,
+    "LastRefreshTime": 1710000000,
+    "TimerFormat": "DD:HH:MM:SS",
+    "ConfigVersion": "18.0.7",
+    "LiveFeedUrl": "https://melmod.com"
+  },
+  "Browser": {
+    "Desc_Hint": "Live Web Loop Connected"
+  },
+  "ModsData": [],
+  "SavesData": []
+}
+
